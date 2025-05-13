@@ -1,30 +1,21 @@
 import requests
 import base64
-import csv
-import time  # To avoid too many rapid requests
-from dotenv import load_dotenv
+import time
 import os
+import pandas as pd
+from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
-# Replace with your real API Key
-API_KEY = os.getenv("API_KEY")
-# Replace with your real API Key
+API_KEY = os.getenv("REED_API_KEY")
 time_sleep = 0.25
 
-
-def get_reed_jobs(job_title, location, total_results=10000, results_per_page=100):
+def get_reed_jobs(job_title, location, total_results=1000, results_per_page=100):
     url = "https://www.reed.co.uk/api/1.0/search"
-
-    # Authentication with API Key in Base64
     auth_value = base64.b64encode(f"{API_KEY}:".encode()).decode()
-    headers = {
-        "Accept": "application/json",
-        "Authorization": f"Basic {auth_value}"
-    }
+    headers = {"Accept": "application/json", "Authorization": f"Basic {auth_value}"}
+    all_jobs = []
 
-    all_jobs = []  # List to store all retrieved jobs
-
-    # Loop to fetch multiple pages of results
     for skip in range(0, total_results, results_per_page):
         params = {
             "keywords": job_title,
@@ -34,43 +25,20 @@ def get_reed_jobs(job_title, location, total_results=10000, results_per_page=100
         }
 
         response = requests.get(url, headers=headers, params=params)
-
         if response.status_code == 200:
             jobs = response.json().get("results", [])
-            if not jobs:
-                break  # If there are no more jobs, exit the loop
-
-            all_jobs.extend(jobs)  # Add new jobs to the list
-            print(f"Retrieved {len(jobs)} jobs (Total: {len(all_jobs)})")
-
-            time.sleep(time_sleep)  # Brief wait to avoid overloading the API
-
+            if not jobs: break
+            all_jobs.extend(jobs)
+            time.sleep(time_sleep)
         else:
-            print("Error:", response.status_code, response.text)
-            break  # Exit if there is an error
+            print(f"❌ REED error {response.status_code}: {response.text}")
+            break
 
-    if all_jobs:
-        # Get all unique keys from jobs for the CSV
-        all_keys = set()
-        for job in all_jobs:
-            all_keys.update(job.keys())
+    if not all_jobs:
+        return pd.DataFrame()
 
-        # Save the data to a CSV file
-        filename = f"REED--{job_title}__{location}.csv"
-        with open(r"tmp_outputs/" + filename , mode="w", newline="", encoding="utf-8") as file:
-            writer = csv.DictWriter(file, fieldnames=list(all_keys))
-            writer.writeheader()
-            writer.writerows(all_jobs)
-
-        print(f"✅ Data saved in {filename} ({len(all_jobs)} jobs)")
-
-    else:
-        print("⚠ No jobs found.")
-
-# 📌 Example: Retrieve up to 500 Data Analyst jobs in Leeds
-
-
-
-
-
- 
+    df = pd.DataFrame(all_jobs)
+    df["search_query"] = job_title
+    df["search_location"] = location
+    df["date_downloaded"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return df
