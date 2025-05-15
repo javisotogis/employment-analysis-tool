@@ -39,6 +39,10 @@ if __name__ == "__main__":
     # remove duplicates
     clean_df = remove_duplicates(all_dfs)
 
+    # remove barista jobs
+    clean_df = clean_df[~(clean_df['title'].str.contains('barista', case=False, na=False) | clean_df['description'].str.contains('barista', case=False, na=False))]
+
+
     # remove existing jobs from the database
 
     new_jobs_from_api_df = filter_new_jobs_from_api(clean_df)

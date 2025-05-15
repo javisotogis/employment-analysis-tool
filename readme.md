@@ -1,5 +1,7 @@
 # Labor Market Analysis of Data Roles in the United Kingdom
 
+# Deliverable 1
+
 ## 📌 Business Case Description
 
 In recent years, data-related roles have seen accelerated growth in the job market. Companies across all industries are increasingly seeking professionals proficient in data analysis, statistics, and visualization tools. However, both job seekers and employers face challenges in understanding which skills are most in demand, what salary ranges are offered, and how job availability varies by region or industry.
@@ -66,63 +68,134 @@ These platforms are selected for their frequency of updates, broad coverage (nat
 
 ---
 
-## 🧱 SQL Database Schema
+# Deliverable 2
 
-The relational database is structured to support efficient querying and analysis. Below is an overview of the main tables and their relationships:
+## Project Description
 
-### `job_postings` Table
-
-| Column Name         | Data Type   | Description                                |
-|---------------------|-------------|--------------------------------------------|
-| job_uuid            | UUID        | Unique identifier for the job posting      |
-| company_uuid        | UUID        | Foreign key referencing the `companies` table |
-| job_title           | VARCHAR     | Name of the job position                   |
-| job_description     | TEXT        | Detailed description of the job role       |
-| location            | VARCHAR     | Free-text location of the job              |
-| latitude            | DECIMAL     | Geographical latitude                      |
-| longitude           | DECIMAL     | Geographical longitude                     |
-| job_type_uuid       | UUID        | Foreign key referencing `job_types` table  |
-| city_uuid           | UUID        | Foreign key referencing `cities` table     |
-| country             | VARCHAR     | Country (typically 'UK')                   |
-| salary_min          | NUMERIC     | Minimum salary offered                     |
-| salary_max          | NUMERIC     | Maximum salary offered                     |
-| estimated_salary    | BOOLEAN     | Whether the salary is an estimate          |
+This deliverable documents the complete **ETL (Extract, Transform, Load)** process applied to job data retrieved from two free public APIs: **Adzuna** and **Reed**. The goal is to unify, enrich, and store job listings in a structured format for further analysis and use.
 
 ---
 
-### `companies` Table
+## 1. Data Extraction (Extract)
 
-| Column Name     | Data Type | Description                  |
-|-----------------|-----------|------------------------------|
-| company_uuid    | UUID      | Unique identifier for company |
-| company_name    | VARCHAR   | Name of the company           |
+Data was retrieved from the public APIs of **Adzuna** and **Reed**, which provide information about job vacancies across different regions and sectors.
 
 ---
 
-### `cities` Table
+## 2. Data Transformation (Transform)
 
-| Column Name   | Data Type | Description                   |
-|---------------|-----------|-------------------------------|
-| city_uuid     | UUID      | Unique identifier for the city |
-| city_name     | VARCHAR   | Name of the city               |
+After extraction, the following data transformation steps were performed:
 
----
-
-### `job_types` Table
-
-| Column Name     | Data Type | Description                    |
-|-----------------|-----------|--------------------------------|
-| job_type_uuid   | UUID      | Unique identifier for job type  |
-| job_type_name   | VARCHAR   | Name of the job type (e.g., Full-time, Contract) |
+- **Standardization**: Data from both APIs was standardized and merged into a single **DataFrame**.
+- **Salary Prediction**: Machine learning techniques in **Python** were used to predict missing salary values. The model was trained using:
+  - The **job description**
+  - The **known salary** (when available)
+  - The **job title**
+- **Job Categorization**: Job descriptions were analyzed to categorize positions based on the presence of specific **keywords** in the text.
+- **Duplicate Check**: The ETL script includes a validation step to ensure no duplicate records are inserted into the database.
+- **Location API Filtering**: The location-enrichment API only processes **new and non-duplicate** location entries, improving efficiency and avoiding redundancy.
 
 ---
 
-## 📊 Final Deliverables
+## 3. Data Loading (Load)
 
-- ETL pipeline for automated data extraction and storage
-- SQL database with normalized job market data
-- Interactive dashboard (Power BI / Streamlit)
-- Documentation for future maintenance and scalability
+The transformed data is loaded into a relational **PostgreSQL** database. The database schema includes the following tables:
+
+- `jobs`: Main table containing job listing information.
+- `job_levels`: Table with information on job seniority or level.
+- `locations`: Table with geographic location data.
+- `keywords`: Table with the most frequently occurring keywords from job descriptions.
+
+---
+
+## Conclusion
+
+This ETL pipeline automates the integration and enrichment of job data from multiple sources, resulting in a clean, structured database that is ready for advanced analysis such as visualization, clustering, or job-market intelligence applications.
+
+
+## Database Schema
+
+The PostgreSQL database consists of the following tables and relationships:
+
+---
+
+### 🏢 `companies`
+
+Stores unique company information.
+
+| Column Name   | Data Type | Description                  |
+|---------------|-----------|------------------------------|
+| company_id    | SERIAL    | Primary key                  |
+| company_name  | TEXT      | Company name (unique, not null) |
+
+---
+
+### 📍 `locations`
+
+Stores geographic information for job listings.
+
+| Column Name   | Data Type   | Description                      |
+|---------------|-------------|----------------------------------|
+| location_id   | SERIAL      | Primary key                      |
+| location_name | TEXT        | Name of the location (not null) |
+| latitude      | DECIMAL(9,6)| Latitude coordinate              |
+| longitude     | DECIMAL(9,6)| Longitude coordinate             |
+
+---
+
+### 💼 `jobs`
+
+Main table containing job listing details.
+
+| Column Name          | Data Type | Description                                  |
+|----------------------|-----------|----------------------------------------------|
+| job_id               | SERIAL    | Primary key                                  |
+| title                | TEXT      | Job title (not null)                         |
+| description          | TEXT      | Job description                              |
+| salary_min           | NUMERIC   | Minimum salary (if available)                |
+| salary_max           | NUMERIC   | Maximum salary (if available)                |
+| predicted_salary_min | NUMERIC   | Predicted minimum salary                     |
+| predicted_salary_max | NUMERIC   | Predicted maximum salary                     |
+| redirect_url         | TEXT      | URL to the original job post                 |
+| created              | TIMESTAMP | Job creation date                            |
+| source               | TEXT      | Source API (e.g., Adzuna or Reed)            |
+| company_id           | INTEGER   | Foreign key → `companies(company_id)`        |
+| location_id          | INTEGER   | Foreign key → `locations(location_id)`       |
+| job_level_id         | INTEGER   | Foreign key → `job_levels(job_level_id)`     |
+
+**Indexes:**
+
+- `idx_jobs_title` on `title`
+
+---
+
+### 📋 `job_metadata`
+
+Stores metadata related to the search and retrieval process.
+
+| Column Name     | Data Type | Description                                  |
+|------------------|-----------|----------------------------------------------|
+| metadata_id      | SERIAL    | Primary key                                  |
+| job_id           | INTEGER   | Foreign key → `jobs(job_id)` (cascade delete)|
+| search_query     | TEXT      | Original search query used                   |
+| search_location  | TEXT      | Location string used in the query            |
+| date_downloaded  | DATE      | Date when the job data was retrieved         |
+
+**Indexes:**
+
+- `idx_metadata_query` on `search_query`
+
+---
+
+### 📊 `job_levels`
+
+Stores predefined job seniority levels.
+
+| Column Name | Data Type | Description                          |
+|-------------|-----------|--------------------------------------|
+| job_level_id| SERIAL    | Primary key                          |
+| level_name  | TEXT      | Job level name (unique, not null)    |
+
 
 ---
 

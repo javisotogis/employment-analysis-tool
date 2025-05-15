@@ -35,12 +35,28 @@ def df_to_db(df: pd.DataFrame, db_url: str):
 
             # Insert any missing values
             new_values = df[df_col].dropna().unique()
-            for val in new_values:
-                if val not in value_id_map:
-                    try:
-                        conn.execute(text(f"INSERT INTO {table} ({name_col}) VALUES (:val)"), {'val': val})
-                    except IntegrityError:
-                        continue
+            if table == 'locations':
+                for val in new_values:
+                    if val not in value_id_map:
+                        try:
+                            subset = df[df[df_col] == val][['latitude', 'longitude']].dropna()
+                            if not subset.empty:
+                                row = subset.iloc[0]
+                                lat, lon = row['latitude'], row['longitude']
+                            else:
+                                lat, lon = None, None
+
+                            conn.execute(
+                                text(f"""
+                                    INSERT INTO locations (location_name, latitude, longitude)
+                                    VALUES (:val, :lat, :lon)
+                                """),
+                                {'val': val, 'lat': lat, 'lon': lon}
+                            )
+                        except IntegrityError:
+                            continue
+
+
 
             # Refresh mapping after insertion
             updated = pd.read_sql(f"SELECT {id_col}, {name_col} FROM {table}", conn)

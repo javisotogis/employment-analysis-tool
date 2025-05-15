@@ -54,7 +54,7 @@ def add_lat_long_if_missing(df, location_column):
             longitudes.append(lon)
             continue
 
-        location = str(row[location_column])
+        location = f"{str(row[location_column])}, UK"
         print(f"🌍 Getting lat/lon for [{idx+1}/{len(df)}]: {location}")
 
         if any(char.isdigit() for char in location):  # Likely a postcode

@@ -22,3 +22,7 @@ venv/
 # Ignore logs and temporary files
 *.log
 *.tmp
+test.py
+/models/
+models/
+

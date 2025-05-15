@@ -8,7 +8,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sqlalchemy import create_engine, text
 import joblib
 
-def predict_and_update_salaries(model_dir='models', metrics_path='metrics_results.csv'):
+def predict_and_update_salaries(model_dir='models', metrics_path='tmp_outputs/metrics_results.csv'):
     db_url = os.getenv("DB_PARAMETERS")
     if not db_url:
         raise ValueError("❌ Environment variable DB_PARAMETERS is not set.")
