@@ -197,6 +197,89 @@ Stores predefined job seniority levels.
 | level_name  | TEXT      | Job level name (unique, not null)    |
 
 
+# Deliverable 3: Power BI Dashboard for Job Analytics
+
+As part of Deliverable 2, a comprehensive Power BI dashboard was developed to analyze data from the PostgreSQL job database.
+
+The dashboard connects directly to the SQL database and presents multiple perspectives on the job market data using clean visuals and interactive filters.
+
+---
+
+## 📊 Dashboard Structure
+
+The Power BI report contains **four main pages** (tabs), each focusing on a different analytical aspect of the data:
+
+1. **Salary Analysis**  
+   - Visual breakdowns of minimum, maximum, and predicted salaries.
+   - Allows comparison by job levels or across time.
+
+2. **Job Titles**  
+   - Highlights the most common job titles.
+   - Helps identify demand trends and role clustering.
+
+3. **Job Locations**  
+   - Maps and charts showing where jobs are concentrated.
+   - Includes geolocation support via latitude and longitude fields.
+
+4. **Companies**  
+   - Provides insights into which companies are posting the most jobs.
+   - Useful for identifying top hiring organizations.
+
+---
+
+## ⚙️ Data Source
+
+- The dashboard uses live or imported data from the PostgreSQL database.
+- Tables used include: `jobs`, `companies`, `locations`, `job_levels`, and `job_metadata`.
+
+---
+
+## 🎯 Purpose
+
+The goal of this deliverable is to enable quick, intuitive exploration of the job market data and to support data-driven insights without writing queries manually.
+
+---
+
+## 📁 File
+
+The final `.pbix` file is included in this repository (or can be provided upon request).
+
+
+
+# Deliverable 4: JobBot - AI-Powered Job Database Assistant
+
+This project is part of **Deliverable 3** for the Data Analytics portfolio.
+
+## 🤖 About JobBot
+
+**JobBot** is a local AI-powered chatbot that answers questions about job listings stored in a PostgreSQL database. It uses a locally hosted large language model (LLM) to interpret natural language questions, translate them into SQL, execute the queries, and return meaningful results — all from your own database.
+
+And in case something goes wrong... it blames humanity 😈
+
+---
+
+## 🧠 Features
+
+- **Natural language interface**: Ask questions like “What’s the highest paid job?” or “Show me 10 jobs in London”.
+- **LLM-powered**: Uses [Mistral-7B-Instruct](https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF) running locally with `llama-cpp-python`.
+- **PostgreSQL integration**: Queries your custom job listings database.
+- **Streamlit UI**: Clean, interactive web interface.
+- **Skynet-style error handling**: When something breaks, the AI returns ironic and darkly humorous messages in Spanish.
+
+---
+
+## 💾 Requirements
+
+- Python 3.8+
+- Conda or virtual environment
+- CPU with enough RAM to run quantized LLM models
+
+### Python packages:
+
+```bash
+pip install -r requirements.txt
+
+
 ---
 
 ## 🤝 Contributing

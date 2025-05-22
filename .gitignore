@@ -25,4 +25,6 @@ venv/
 test.py
 /models/
 models/
+chatbot\models\mistral-7b-instruct-v0.1.Q2_K.gguf
+chatbot/models/mistral-7b-instruct-v0.1.Q2_K.gguf
 
